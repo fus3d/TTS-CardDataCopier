@@ -1,0 +1,163 @@
+-------- one more time with the custom tile
+--
+self.setName("Copy cards")
+self.setDescription("Put a source deck and target deck and click here")
+
+button_parameters = {}
+button_parameters.click_function = 'CopyCards'
+button_parameters.function_owner = self
+button_parameters.label = 'Copy'
+button_parameters.position = {-.45,-.25,0}
+button_parameters.rotation = {0,90,180}
+button_parameters.width = 175
+button_parameters.height = 40
+button_parameters.font_size = 40
+
+self.createButton(button_parameters)
+
+function locateDeck(pos, buf)
+  local objs = getAllObjects()
+  local mat = getObjectFromGUID("a4ed0c")
+  for k, v in pairs(objs) do
+      local gp = v.getPosition()
+      local lp = mat.positionToLocal(gp)
+      -- print(gp)
+      -- print(lp)
+      if ((lp[1] < pos[1]+buf) and (lp[1] > pos[1]-buf) and (lp[3] < pos[3]+buf) and (lp[3] > pos[3]-buf)) then
+         return v.guid
+      end
+   end
+end
+
+function CopyCards()
+  local source_pos = {-.30, 0, -.65}
+  local dest_pos = {.15, 0, -.66}
+  local buf = .04
+  local sourceDeckID = locateDeck(source_pos, buf)
+  local destDeckID = locateDeck(dest_pos, buf)
+  local cardnum=0
+  local mat = getObjectFromGUID("a4ed0c")
+  local global_src_pos = mat.positionToWorld(source_pos)
+  local global_dst_pos = mat.positionToWorld(dest_pos)
+  local src_discard = global_src_pos
+  local dst_discard = global_dst_pos
+  src_discard["z"] = src_discard["z"] + -5
+  dst_discard["z"] = dst_discard["z"] + -5
+  src_discard["y"] = src_discard["y"] + 1
+  dst_discard["y"] = dst_discard["y"] + 1
+  sourceDeck = getObjectFromGUID(sourceDeckID)
+  destDeck = getObjectFromGUID(destDeckID)
+  sourceCards = sourceDeck.getObjects()
+  destCards = destDeck.getObjects()
+
+  if #sourceCards ~= #destCards then 
+	print("Deck sizes are different, they must bew the same")
+    return 0
+  end
+  -- need to provide a warning to the user here.
+  -- print(sourceDeck.is_face_down)
+  -- print(destDeck.is_face_down)
+  if sourceDeck.is_face_down ~= destDeck.is_face_down then
+    print("decks are not flipped on the same side")
+    return 0
+  end
+  for x = 1,#sourceCards do
+    if #sourceCards - x > 0 then
+       sourceCard = sourceDeck.takeObject({
+           guid = sourceCards[x].guid,
+           position = src_discard 
+       })
+       destCard = destDeck.takeObject({
+           guid = destCards[x].guid,
+           position = dst_discard
+       })
+    else 
+      sourceCard = getObjectFromGUID(sourceCards[x].guid)
+      sourceCard.setPosition(src_discard)
+      destCard = getObjectFromGUID(destCards[x].guid)
+      destCard.setPosition(dst_discard)
+    end
+    destCard.setDescription(sourceCard.getDescription())
+    destCard.setName(sourceCard.getName())
+    destCard.setTags(sourceCard.getTags())
+  end
+end
+
+    -- getObjectFromGUID(sourceCards[cardnum].guid)
+    -- destCard = destCards[x] 
+   -- print(sourceCard.getDescription())
+    -- print("source gid")
+    -- print(sourceCards[x].index)
+    -- print(sourceCards[x].guid)
+    -- print("destination gid")
+    -- print(destCards[x].index)
+    -- print(destCards[x].guid)
+     
+-- sc1 - -.32, 0, 0.01
+-- sc2 - -.32, 0, .67
+-- 
+-- dc1 - .13, 0. 0.01
+-- dc2 - .13, 0, .68
+
+
+function Old()
+    print("Run Code")
+    local objs = getAllObjects()
+    local mat = getObjectFromGUID("a4ed0c")
+    local bounds = (mat.getBounds())
+      -- for k, v in pairs(bounds) do
+      --   print(v)
+      -- end
+      for k, v in pairs(objs) do
+          local gp = v.getPosition()
+          local lp = mat.positionToLocal(gp)
+          -- print(gp)
+          -- print(lp)
+          -- if v.guid == "b187de" then
+          --   print(gp)
+          --   print(lp)
+          -- end
+          
+          if ((lp[1] < .50) and (lp[1] > -.50) and (lp[3] < 1) and (lp[3] > -1)) then
+            print(v.guid)
+            print(gp)
+            print(lp)
+          end
+      print("can we find it")
+	  print(locateDeck({-.30,0,-.65}, .03))
+      end
+end
+
+
+-- DECK CORDINATES
+-- source - -.30, 0, -.65
+-- dest   -  .15, 0, -.66
+-- 
+-- sc1 - -.32, 0, 0.01
+-- sc2 - -.32, 0, .67
+-- 
+-- dc1 - .13, 0. 0.01
+-- dc2 - .13, 0, .68
+
+
+-- function to find object in radius
+-- function findInRadiusBy(pos, radius, func, debug)
+--     local radius = (radius or 1)
+--     local objList = Physics.cast({
+--         origin=pos, direction={0,1,0}, type=2, size={radius,radius,radius},
+--         max_distance=0, debug=(debug or false)
+--     })
+-- 
+--     local refinedList = {}
+--     for _, obj in ipairs(objList) do
+--         if func == nil then
+--             table.insert(refinedList, obj.hit_object)
+--         else
+--             if func(obj.hit_object) then
+--                 table.insert(refinedList, obj.hit_object)
+--             end
+--         end
+--     end
+-- 
+--     return refinedList
+-- end
